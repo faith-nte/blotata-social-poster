@@ -59,17 +59,37 @@
         0
       ],
       "parameters": {
-        "url": "={{ 'https://api.apify.com/v2/actor-runs/' + $json.fields.ApifyRunId }}",
-        "method": "GET",
-        "authentication": "genericCredentialType",
-        "options": {
-          "timeout": 120000
+        "method": "POST",
+        "url": "https://mcp.apify.com?tools=call-actor,fetch-actor-details",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyMcpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json, text/event-stream"
+            },
+            {
+              "name": "Mcp-Session-Id",
+              "value": "={{ $('Initialize Apify').first().json.headers['mcp-session-id'] }}"
+            }
+          ]
         },
-        "genericAuthType": "httpHeaderAuth"
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"resources/read\",\n  \"params\": {\n    \"uri\": \"https://api.apify.com/v2/actor-runs/{{ $('Record').first().json.fields.ApifyRunId }}\"\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
       },
       "credentials": {
-        "httpHeaderAuth": {
-          "name": "Apify"
+        "apifyMcpOAuth2Api": {
+          "name": "Apify account"
         }
       }
     },
@@ -83,7 +103,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const s=$json.data?.status; if(['FAILED','TIMED-OUT','ABORTED'].includes(s)) throw new Error('Apify '+s); return s==='SUCCEEDED'?items:[];"
+        "jsCode": "const raw=$json.data ?? $json.body ?? $json; const rpc=typeof raw==='string' ? JSON.parse(raw.split('\\n').find(l=>l.startsWith('data: ')).slice(6)) : raw; if(rpc.error || rpc.result?.isError) throw new Error(JSON.stringify(rpc.error || rpc.result)); const body=JSON.parse(rpc.result.contents[0].text); const s=body.data.status; if(['FAILED','TIMED-OUT','ABORTED'].includes(s)) throw new Error('APIFY_RUN_'+s); return s==='SUCCEEDED' ? [{json:body}] : [];"
       }
     },
     {
@@ -96,17 +116,37 @@
         0
       ],
       "parameters": {
-        "url": "={{ 'https://api.apify.com/v2/datasets/' + $('Record').first().json.fields.ApifyDatasetId + '/items' }}",
-        "method": "GET",
-        "authentication": "genericCredentialType",
-        "options": {
-          "timeout": 120000
+        "method": "POST",
+        "url": "https://mcp.apify.com?tools=call-actor,fetch-actor-details",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyMcpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json, text/event-stream"
+            },
+            {
+              "name": "Mcp-Session-Id",
+              "value": "={{ $('Initialize Apify').first().json.headers['mcp-session-id'] }}"
+            }
+          ]
         },
-        "genericAuthType": "httpHeaderAuth"
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"resources/read\",\n  \"params\": {\n    \"uri\": \"https://api.apify.com/v2/datasets/{{ $('Record').first().json.fields.ApifyDatasetId }}/items\"\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
       },
       "credentials": {
-        "httpHeaderAuth": {
-          "name": "Apify"
+        "apifyMcpOAuth2Api": {
+          "name": "Apify account"
         }
       },
       "alwaysOutputData": true
@@ -121,7 +161,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const r=items.map(i=>i.json).flat(); const d=r.find(x=>x.status!=='error' && typeof x.transcript==='string' && x.transcript.trim().length>=140); if(!d) throw new Error('NO_USABLE_TRANSCRIPT'); return [{json:d}];"
+        "jsCode": "const raw=$json.data ?? $json.body ?? $json; const rpc=typeof raw==='string' ? JSON.parse(raw.split('\\n').find(l=>l.startsWith('data: ')).slice(6)) : raw; if(rpc.error || rpc.result?.isError) throw new Error(JSON.stringify(rpc.error || rpc.result)); const r=JSON.parse(rpc.result.contents[0].text); const d=r.find(x=>x.status!=='error' && typeof x.transcript==='string' && x.transcript.trim().length>=140); if(!d) throw new Error('NO_USABLE_TRANSCRIPT'); return [{json:d}];"
       }
     },
     {
@@ -217,6 +257,46 @@
           "name": "Airtable Personal Access Token account"
         }
       }
+    },
+    {
+      "id": "3e08fb4b-cedf-4308-a59d-5fa3e41f2150",
+      "name": "Initialize Apify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://mcp.apify.com?tools=call-actor,fetch-actor-details",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyMcpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json, text/event-stream"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"initialize\", \"params\": {\"protocolVersion\": \"2024-11-05\", \"capabilities\": {}, \"clientInfo\": {\"name\": \"n8n\", \"version\": \"1.0\"}}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "apifyMcpOAuth2Api": {
+          "name": "Apify account"
+        }
+      }
     }
   ],
   "connections": {
@@ -246,7 +326,7 @@
       "main": [
         [
           {
-            "node": "Check Apify",
+            "node": "Initialize Apify",
             "type": "main",
             "index": 0
           }
@@ -324,6 +404,17 @@
         [
           {
             "node": "Save draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Apify": {
+      "main": [
+        [
+          {
+            "node": "Check Apify",
             "type": "main",
             "index": 0
           }
