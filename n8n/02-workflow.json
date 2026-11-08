@@ -2,7 +2,7 @@
   "name": "Blotato 02 - Transcript to draft",
   "nodes": [
     {
-      "id": "85c33f2e-8236-47f7-ac4d-80308d2ae35b",
+      "id": "634dc12d-525d-46d4-96bd-c614ad472571",
       "name": "Manual",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -13,7 +13,7 @@
       "parameters": {}
     },
     {
-      "id": "3b76dd24-53bf-4b7f-a667-a9aaafea42f9",
+      "id": "155ed97b-20b9-498c-a6e0-f76cc1600f19",
       "name": "Find record",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -37,7 +37,7 @@
       }
     },
     {
-      "id": "c698582c-4c65-4d5a-bcf8-37accea13044",
+      "id": "d182f0b2-6adb-442d-bebd-9cf85b94099d",
       "name": "Record",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -50,7 +50,7 @@
       }
     },
     {
-      "id": "853b2f7b-41eb-4b80-80c3-72fb71f6615c",
+      "id": "a1237f89-875e-4bdf-8541-4c42fede27f6",
       "name": "Check Apify",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -74,7 +74,7 @@
       }
     },
     {
-      "id": "7953f5cb-bce9-4310-baac-0ad2447f5ea2",
+      "id": "6685194a-a0c4-46b3-88d4-beb0eb6ac7af",
       "name": "Ready transcript",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -87,7 +87,7 @@
       }
     },
     {
-      "id": "31593447-db8a-487a-ab30-d3bcc87d9de9",
+      "id": "591e339d-6587-4f2a-a2ac-7ef5377c92c1",
       "name": "Read transcript",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -108,10 +108,11 @@
         "httpHeaderAuth": {
           "name": "Apify"
         }
-      }
+      },
+      "alwaysOutputData": true
     },
     {
-      "id": "7c9e2550-6be9-442f-8343-d1ea0a51bdcd",
+      "id": "9a279199-accd-4132-b2eb-ba4c25cd040c",
       "name": "Validate transcript",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -124,7 +125,7 @@
       }
     },
     {
-      "id": "f371008e-52fd-4369-a9aa-aa40c47840d9",
+      "id": "81f7eab0-c5ca-4feb-800d-37f22838bb5b",
       "name": "Claim drafting",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -142,7 +143,7 @@
         "nodeCredentialType": "airtableTokenApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {fields: {Status:'Drafting'}} }}"
+        "jsonBody": "={{ ({fields: {Status:'Drafting'} }) }}"
       },
       "credentials": {
         "airtableTokenApi": {
@@ -151,7 +152,7 @@
       }
     },
     {
-      "id": "550a20e8-67ec-49df-8781-3008a161844d",
+      "id": "c7662c7d-7bfe-4b16-8367-4c214e8490d7",
       "name": "Write draft",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -169,16 +170,16 @@
         "nodeCredentialType": "openAiApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {model:'gpt-4.1',response_format:{type:'json_object'},messages:[{role:'system',content:\"Rewrite the supplied Instagram transcript into an original UK English talking-head script on the same exact topic and niche. Preserve its useful structure while using fresh examples, preferably private medical practice where appropriate. 60\\u201375 words, at most 1500 characters, no em dash. End with: Hit follow to stay up to date! Caption at most 500 characters and five hashtags. Overlay at most eight words with no emoji and punctuation only ? or !. Do not invent facts. Return a JSON object with Script, Caption and Overlay string keys.\"},{role:'user',content:$('Validate transcript').first().json.transcript}]} }}"
+        "jsonBody": "={{ ({model:'gpt-4.1',response_format:{type:'json_object'},messages:[{role:'system',content:\"Rewrite the supplied Instagram transcript into an original UK English talking-head script on the same exact topic and niche. Preserve its useful structure while using fresh examples, preferably private medical practice where appropriate. 60\\u201375 words, at most 1500 characters, no em dash. End with: Hit follow to stay up to date! Caption at most 500 characters and five hashtags. Overlay at most eight words with no emoji and punctuation only ? or !. Do not invent facts. Return a JSON object with Script, Caption and Overlay string keys.\"},{role:'user',content:$('Validate transcript').first().json.transcript}]}) }}"
       },
       "credentials": {
         "openAiApi": {
-          "name": "OpenAi account"
+          "name": "OpenAI account"
         }
       }
     },
     {
-      "id": "28fb870a-71f8-4000-a265-92a1c2af37f3",
+      "id": "eb763558-d0fe-42e0-bf6d-9552569a8842",
       "name": "Validate draft",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -191,7 +192,7 @@
       }
     },
     {
-      "id": "8da78b0d-934a-487a-9ad7-5765f1e84d88",
+      "id": "b5b6598d-e58a-4389-9ad7-6460665d01bd",
       "name": "Save draft",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -209,7 +210,7 @@
         "nodeCredentialType": "airtableTokenApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {fields: {Status:'Draft',Script:$json.Script,Caption:$json.Caption,Overlay:$json.Overlay,Approved:false}} }}"
+        "jsonBody": "={{ ({fields: {Status:'Draft',Script:$json.Script,Caption:$json.Caption,Overlay:$json.Overlay,Approved:false} }) }}"
       },
       "credentials": {
         "airtableTokenApi": {
