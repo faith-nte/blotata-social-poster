@@ -1,0 +1,280 @@
+{
+  "name": "Blotato 05 - Publish approved Instagram reel",
+  "nodes": [
+    {
+      "id": "a59e8292-8371-4e03-9790-efaa9ba601cf",
+      "name": "Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "cb94f376-29f9-4073-ad42-0cbf5fc1b80e",
+      "name": "Find record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS?filterByFormula=AND%28%7BStatus%7D%3D%27VideoReady%27%2C%7BApproved%7D%3D1%2C%7BVideoURL%7D%21%3D%27%27%29&maxRecords=1",
+        "method": "GET",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "5d206966-ffe9-451b-a5b6-a45a56e66de4",
+      "name": "Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return ($json.records || []).map(r=>({json:r}));"
+      }
+    },
+    {
+      "id": "ad9e564c-e896-4f45-83ed-bf172a11f6f3",
+      "name": "Claim publishing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS/' + $('Record').first().json.id }}",
+        "method": "PATCH",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {fields: {Status:'Publishing',ErrorLog:''}} }}"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "49fda599-6c8a-42ef-b37f-e66d0e930427",
+      "name": "Upload to Blotato",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "url": "https://backend.blotato.com/v2/media",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {url:$('Record').first().json.fields.VideoURL} }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Blotato"
+        }
+      }
+    },
+    {
+      "id": "04d96dcd-f65f-4aa1-9e1d-ec0e8d07601d",
+      "name": "Validate media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "jsCode": "if(!$json.url) throw new Error('Blotato returned no media URL'); return items;"
+      }
+    },
+    {
+      "id": "f8b4ef79-73b4-4b0f-9c7d-2296f6bc7a34",
+      "name": "Publish Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "url": "https://backend.blotato.com/v2/posts",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {post:{accountId:'24024',content:{text:$('Record').first().json.fields.Caption,mediaUrls:[$json.url],platform:'instagram'},target:{targetType:'instagram',mediaType:'reel'}},useNextFreeSlot:false} }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Blotato"
+        }
+      }
+    },
+    {
+      "id": "8b2b4229-c88f-450c-8c89-3fac5fee6017",
+      "name": "Validate submission",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "jsCode": "if(!$json.postSubmissionId) throw new Error('Blotato returned no submission ID'); return items;"
+      }
+    },
+    {
+      "id": "0c933c0a-3804-4e80-857a-ee591b356ba3",
+      "name": "Save submission",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS/' + $('Record').first().json.id }}",
+        "method": "PATCH",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {fields: {Status:'Submitted',BlotatoSubmissionId:$json.postSubmissionId}} }}"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual": {
+      "main": [
+        [
+          {
+            "node": "Find record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find record": {
+      "main": [
+        [
+          {
+            "node": "Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record": {
+      "main": [
+        [
+          {
+            "node": "Claim publishing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim publishing": {
+      "main": [
+        [
+          {
+            "node": "Upload to Blotato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Blotato": {
+      "main": [
+        [
+          {
+            "node": "Validate media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate media": {
+      "main": [
+        [
+          {
+            "node": "Publish Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Instagram": {
+      "main": [
+        [
+          {
+            "node": "Validate submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate submission": {
+      "main": [
+        [
+          {
+            "node": "Save submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
