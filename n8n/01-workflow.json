@@ -86,20 +86,37 @@
         0
       ],
       "parameters": {
-        "url": "https://api.apify.com/v2/acts/3C7L8IMQOkq3isV2Y/runs",
         "method": "POST",
-        "authentication": "genericCredentialType",
-        "options": {
-          "timeout": 120000
+        "url": "https://mcp.apify.com?tools=call-actor,fetch-actor-details",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyMcpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json, text/event-stream"
+            },
+            {
+              "name": "Mcp-Session-Id",
+              "value": "={{ $('Initialize Apify').first().json.headers['mcp-session-id'] }}"
+            }
+          ]
         },
-        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ ({instagramUrl:$('Record').first().json.fields.ReelURL,fastProcessing:false}) }}"
+        "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"call-actor\",\n    \"arguments\": {\n      \"actor\": \"3C7L8IMQOkq3isV2Y\",\n      \"input\": {\n        \"instagramUrl\": \"{{ $('Record').first().json.fields.ReelURL }}\",\n        \"fastProcessing\": false\n      },\n      \"waitSecs\": 0,\n      \"callOptions\": {\n        \"memory\": 128,\n        \"timeout\": 300,\n        \"maxItems\": 1,\n        \"maxTotalChargeUsd\": 1\n      }\n    }\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
       },
       "credentials": {
-        "httpHeaderAuth": {
-          "name": "Apify"
+        "apifyMcpOAuth2Api": {
+          "name": "Apify account"
         }
       }
     },
@@ -113,7 +130,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "if (!$json.data?.id || !$json.data?.defaultDatasetId) throw new Error('Missing Apify run or dataset ID'); return items;"
+        "jsCode": "const raw=$json.data ?? $json.body ?? $json; const rpc=typeof raw==='string' ? JSON.parse(raw.split('\\n').find(l=>l.startsWith('data: ')).slice(6)) : raw; if(rpc.error || rpc.result?.isError) throw new Error(JSON.stringify(rpc.error || rpc.result)); const d=rpc.result.structuredContent; if(!d?.runId || !d?.storages?.datasets?.default?.id) throw new Error('APIFY_RUN_RESPONSE: '+JSON.stringify(rpc.result)); return [{json:{data:{id:d.runId,defaultDatasetId:d.storages.datasets.default.id}}}];"
       }
     },
     {
@@ -140,6 +157,46 @@
       "credentials": {
         "airtableTokenApi": {
           "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "4c4d7c92-4a65-41bc-be33-c9771265c8cc",
+      "name": "Initialize Apify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://mcp.apify.com?tools=call-actor,fetch-actor-details",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyMcpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json, text/event-stream"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"initialize\", \"params\": {\"protocolVersion\": \"2024-11-05\", \"capabilities\": {}, \"clientInfo\": {\"name\": \"n8n\", \"version\": \"1.0\"}}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "apifyMcpOAuth2Api": {
+          "name": "Apify account"
         }
       }
     }
@@ -182,7 +239,7 @@
       "main": [
         [
           {
-            "node": "Start Apify",
+            "node": "Initialize Apify",
             "type": "main",
             "index": 0
           }
@@ -205,6 +262,17 @@
         [
           {
             "node": "Save transcription job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Apify": {
+      "main": [
+        [
+          {
+            "node": "Start Apify",
             "type": "main",
             "index": 0
           }
