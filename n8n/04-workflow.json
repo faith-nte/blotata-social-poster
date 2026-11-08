@@ -2,7 +2,7 @@
   "name": "Blotato 04 - Check HeyGen video",
   "nodes": [
     {
-      "id": "a7567776-e873-4078-838e-d8308cfdb8c6",
+      "id": "fde8c039-4675-4a69-bba8-2cd3a8ea640e",
       "name": "Manual",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -13,7 +13,7 @@
       "parameters": {}
     },
     {
-      "id": "724ca6ef-e245-4b32-8a4e-30c046822ba6",
+      "id": "23e9b3b0-2e70-4ce3-8750-7413322f27c7",
       "name": "Find record",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -37,7 +37,7 @@
       }
     },
     {
-      "id": "d5fd07dc-7400-4ddf-be23-9b0701329bb3",
+      "id": "fbe35fdd-3d66-463b-aeef-838c6a786860",
       "name": "Record",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -50,7 +50,7 @@
       }
     },
     {
-      "id": "b060d471-3ca7-4ee5-8d47-0d2431926ce9",
+      "id": "1d5c664b-70d5-4497-a511-4c5e50744b63",
       "name": "Check video",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -74,7 +74,7 @@
       }
     },
     {
-      "id": "2d7791f9-c4c1-42a1-bc96-653283e2fcfa",
+      "id": "b09e813d-2f61-44a9-a93c-adf33ce9a476",
       "name": "Completed video",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -87,7 +87,7 @@
       }
     },
     {
-      "id": "852b200b-93d8-4faa-8332-86654d708a13",
+      "id": "488c157a-e457-4c0e-a805-ee27d04a229b",
       "name": "Save video",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -105,7 +105,7 @@
         "nodeCredentialType": "airtableTokenApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {fields: {Status:'VideoReady',VideoURL:$json.video_url}} }}"
+        "jsonBody": "={{ ({fields: {Status:'VideoReady',VideoURL:$json.video_url} }) }}"
       },
       "credentials": {
         "airtableTokenApi": {
