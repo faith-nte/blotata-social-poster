@@ -2,7 +2,7 @@
   "name": "Blotato 05 - Publish approved Instagram reel",
   "nodes": [
     {
-      "id": "a59e8292-8371-4e03-9790-efaa9ba601cf",
+      "id": "5d1dd860-ee85-4bf2-b670-25c8a2a1753e",
       "name": "Manual",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -13,7 +13,7 @@
       "parameters": {}
     },
     {
-      "id": "cb94f376-29f9-4073-ad42-0cbf5fc1b80e",
+      "id": "e873d29f-efc2-4c2a-82d4-a307abf131e4",
       "name": "Find record",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -37,7 +37,7 @@
       }
     },
     {
-      "id": "5d206966-ffe9-451b-a5b6-a45a56e66de4",
+      "id": "4455bba0-bfa8-44d6-8453-10027297cbf9",
       "name": "Record",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -50,7 +50,7 @@
       }
     },
     {
-      "id": "ad9e564c-e896-4f45-83ed-bf172a11f6f3",
+      "id": "6d0f322a-240c-4163-927c-52625b2d035d",
       "name": "Claim publishing",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -68,7 +68,7 @@
         "nodeCredentialType": "airtableTokenApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {fields: {Status:'Publishing',ErrorLog:''}} }}"
+        "jsonBody": "={{ ({fields: {Status:'Publishing',ErrorLog:''} }) }}"
       },
       "credentials": {
         "airtableTokenApi": {
@@ -77,7 +77,7 @@
       }
     },
     {
-      "id": "49fda599-6c8a-42ef-b37f-e66d0e930427",
+      "id": "ac1042cf-22a1-4876-838b-aa97d803ffb4",
       "name": "Upload to Blotato",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -95,7 +95,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {url:$('Record').first().json.fields.VideoURL} }}"
+        "jsonBody": "={{ ({url:$('Record').first().json.fields.VideoURL}) }}"
       },
       "credentials": {
         "httpHeaderAuth": {
@@ -104,7 +104,7 @@
       }
     },
     {
-      "id": "04d96dcd-f65f-4aa1-9e1d-ec0e8d07601d",
+      "id": "d63be38d-bbcb-4369-b1bf-b5a03b09eca8",
       "name": "Validate media",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -117,7 +117,7 @@
       }
     },
     {
-      "id": "f8b4ef79-73b4-4b0f-9c7d-2296f6bc7a34",
+      "id": "53b68e6e-23d1-4cf6-8eb0-d1d7f0b0ddd1",
       "name": "Publish Instagram",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -135,7 +135,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {post:{accountId:'24024',content:{text:$('Record').first().json.fields.Caption,mediaUrls:[$json.url],platform:'instagram'},target:{targetType:'instagram',mediaType:'reel'}},useNextFreeSlot:false} }}"
+        "jsonBody": "={{ ({post:{accountId:'24024',content:{text:$('Record').first().json.fields.Caption,mediaUrls:[$json.url],platform:'instagram'},target:{targetType:'instagram',mediaType:'reel'} },useNextFreeSlot:false}) }}"
       },
       "credentials": {
         "httpHeaderAuth": {
@@ -144,7 +144,7 @@
       }
     },
     {
-      "id": "8b2b4229-c88f-450c-8c89-3fac5fee6017",
+      "id": "502ab8c0-593a-461b-a9e3-02dc9d66b3eb",
       "name": "Validate submission",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -157,7 +157,7 @@
       }
     },
     {
-      "id": "0c933c0a-3804-4e80-857a-ee591b356ba3",
+      "id": "19298547-3acd-46eb-a57d-3ddce0cdba1d",
       "name": "Save submission",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -175,7 +175,7 @@
         "nodeCredentialType": "airtableTokenApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {fields: {Status:'Submitted',BlotatoSubmissionId:$json.postSubmissionId}} }}"
+        "jsonBody": "={{ ({fields: {Status:'Submitted',BlotatoSubmissionId:$json.postSubmissionId} }) }}"
       },
       "credentials": {
         "airtableTokenApi": {
