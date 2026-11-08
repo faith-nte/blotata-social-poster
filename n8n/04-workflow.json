@@ -1,0 +1,177 @@
+{
+  "name": "Blotato 04 - Check HeyGen video",
+  "nodes": [
+    {
+      "id": "a7567776-e873-4078-838e-d8308cfdb8c6",
+      "name": "Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "724ca6ef-e245-4b32-8a4e-30c046822ba6",
+      "name": "Find record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS?filterByFormula=AND%28%7BStatus%7D%3D%27Generating%27%2C%7BHeyGenVideoId%7D%21%3D%27%27%29&maxRecords=1",
+        "method": "GET",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "d5fd07dc-7400-4ddf-be23-9b0701329bb3",
+      "name": "Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return ($json.records || []).map(r=>({json:r}));"
+      }
+    },
+    {
+      "id": "b060d471-3ca7-4ee5-8d47-0d2431926ce9",
+      "name": "Check video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.heygen.com/v3/videos/'+$json.fields.HeyGenVideoId }}",
+        "method": "GET",
+        "authentication": "genericCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "HeyGen"
+        }
+      }
+    },
+    {
+      "id": "2d7791f9-c4c1-42a1-bc96-653283e2fcfa",
+      "name": "Completed video",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const d=$json.data||$json; if(d.status==='failed') throw new Error('HeyGen video failed'); if(d.status!=='completed') return []; if(!d.video_url) throw new Error('Completed video has no URL'); return [{json:d}];"
+      }
+    },
+    {
+      "id": "852b200b-93d8-4faa-8332-86654d708a13",
+      "name": "Save video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS/' + $('Record').first().json.id }}",
+        "method": "PATCH",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {fields: {Status:'VideoReady',VideoURL:$json.video_url}} }}"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual": {
+      "main": [
+        [
+          {
+            "node": "Find record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find record": {
+      "main": [
+        [
+          {
+            "node": "Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record": {
+      "main": [
+        [
+          {
+            "node": "Check video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check video": {
+      "main": [
+        [
+          {
+            "node": "Completed video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Completed video": {
+      "main": [
+        [
+          {
+            "node": "Save video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
