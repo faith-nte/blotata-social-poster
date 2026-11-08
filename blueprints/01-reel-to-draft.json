@@ -1,0 +1,294 @@
+{
+  "flow": [
+    {
+      "id": 24,
+      "mapper": {},
+      "module": "airtable:TriggerWatchRecords",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 150,
+          "name": "New Reel URL"
+        }
+      },
+      "parameters": {
+        "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+        "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+        "config": {
+          "labelField": "CreatedTime",
+          "triggerField": "CreatedTime"
+        },
+        "formula": "",
+        "maxRecords": 1,
+        "useColumnId": false
+      }
+    },
+    {
+      "id": 171,
+      "mapper": {
+        "step": "1",
+        "start": "1",
+        "repeats": "2"
+      },
+      "module": "builtin:BasicRepeater",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 150
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 25,
+      "mapper": {
+        "memory": 4096,
+        "actorId": "3C7L8IMQOkq3isV2Y",
+        "runSync": true,
+        "actor_search_type": "store",
+        "inputBody3C7L8IMQOkq3isV2Y": "{\n    \"instagramUrl\": \"{{24.ReelURL}}\",\n    \"fastProcessing\": false\n}"
+      },
+      "module": "apify:runActorNew",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 150,
+          "name": "Download Instagram Reel"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 50,
+      "mapper": {
+        "duration": "30"
+      },
+      "module": "util:FunctionSleep",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 150,
+          "name": "Wait"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 26,
+      "mapper": {
+        "type": "clean",
+        "format": "json",
+        "datasetId": "{{25.defaultDatasetId}}"
+      },
+      "module": "apify:fetchDatasetItems",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 150,
+          "name": "Get Data"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 116,
+      "mapper": null,
+      "module": "builtin:BasicRouter",
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 28,
+              "filter": {
+                "name": "success",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{ifempty(26.status; emptystring)}}",
+                      "b": "error",
+                      "o": "text:notequal"
+                    },
+                    {
+                      "a": "{{length(trim(ifempty(26.transcript; emptystring)))}}",
+                      "b": "140",
+                      "o": "number:greaterorequal"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "model": "gpt-4.1",
+                "top_p": "1",
+                "select": "chat",
+                "messages": [
+                  {
+                    "role": "system",
+                    "content": "Your task is to rewrite an Instagram reel script, caption, and overlay without inventing a new one. You must follow the rules I give you strictly."
+                  },
+                  {
+                    "role": "user",
+                    "content": "IMPORTANT SAFETY RULE: If the Original Script is empty, obviously incomplete, non-speech, or shorter than 140 characters, do not infer or invent what was said from the caption, hashtags, or visuals. In that case output exactly:\n- Script : NO_USABLE_TRANSCRIPT\n- Caption : NO_USABLE_TRANSCRIPT\n- Overlay : NO_USABLE_TRANSCRIPT\n\n# GIVEN INPUT:\n- Original Script : {{26.transcript}}\n- Original Caption : {{26.caption}}\n- Original Hashtags : {{26.hashtags}}\n\n---\n\n# TASKS\n\nSTEP 1: Rewrite the original video script using a new topic/context, preferrably private medical practices but closely maintain the original script structure and style.\n\nFollow these rules:\n- The rewritten script should be about 30 seconds when spoken aloud. Aim for around 60\u201375 words in length (1500 characters maximum!)\n- Keep it in the same niche and on the exact same topic\n- Ensure the idea offers fresh value while staying relevant\n- Maintain the nature of the topic (e.g., if it\u2019s a list, yours must also be a list; if it\u2019s a plan, yours must also be a plan)\n- Be specific at the same level as the original script (e.g., if the original names tools, you must also name specific tools, not generic ones)\n- First sentence should create an irresistible curiosity gap to hook viewers\n- Similar sentence count and layout\n- Ensure the idea is appealing to a broad audience\n- Replace the last sentence with this CTA: \"Hit follow to stay up to date!\"\n- Never use any characers like \"\" or quotations\n\nYou can change:\n- Use cases\n- Descriptions\n- Niche-specific keywords\n- Use different examples (e.g., new tools, new strategies) while keeping the same structure/type of content\n- Add a unique angle or perspective that helps the idea stand out on social media\n\nYour final output should be in monologue style avatar script, following this example. Capitalization and punctuation instruct the avatar how to speak, so study the following example and emulate its structure, capitalization, and punctuation. Never use em dashes, don't be cringe. Use UK english only\n\n<example>\nEVERYONE thought seniors would HATE talking to AI, but they're WRONG! Seniors are now trusting AI to check their blood pressure AND it's WORKING! This study tested voice AI agents helping two thousand seniors report blood pressure over the phone, and here's what happened: AI reached 85% of the people, 60% followed instructions and gave an accurate reading in English or Spanish, if anything was off like dizziness or chest pain, AI escalated to a real nurse, and the voice AI agents raised quality scores from 1 star to 4 stars AND AI cut costs by almost 90%. People were super happy, 9 out of 10 gave it high satisfaction scores,  I love this use case, healthcare needs A LOT OF help!\n</example>\n\n<example>\nIf you run a clinic, Google isn\u2019t your only patient problem\u2026\nBut if you want more patients fast, these 5 local SEO myths are slowing your growth.\n\nMyth 1: \u201cPatients will find us because we\u2019re nearby.\u201d\nNot really.\nOnce you\u2019re in the top results, reviews and specific services beat distance every time.\n\nMyth 2: \u201cMore stars = more bookings.\u201d\nNot always.\nGoogle prioritises contextual, experience-based reviews, not random or peer reviews.\nStuffing your profile can actually hurt you.\n\nMyth 3: \u201cJust list our contact info.\u201d\nBare minimum won\u2019t cut it.\nUpload photos. Add procedures. Update your profile weekly.\nActivity = relevance.\n\nMyth 4: \u201cWe only need a funnel as a new clinic.\u201d\nWrong.\nGoogle has manual raters.\nYour Google Profile info should match your website.\nLocal treatment pages \u2192 link them back to your GBP.\n\nMyth 5: \u201cAll practices rank the same.\u201d\nThey don\u2019t.\nPaediatrics: reviews matter most.\nDermatology: photos matter most.\nEach speciality has its own ranking signals.\n\nNow ask yourself\u2026\nAre your reviews, keywords, and photos actually doing their job?\n\nFollow for more clinic marketing tips.\n\n</example>\n\nSTEP 2: Rewrite the caption text using the new topic. Follow these rules:\n\n- Same structure and tone\n- Same use of #hashtags but space between each hashtag (max 5 hashtags)\n- SEO optimized (maximum 500 characters)\n- Use 6th grade reading level.\n\nSTEP 3: Write 1 viral sentence, max 8 words, summarizing the content, use 6th grade language, balanced neutral perspective, no emojis, no punctuation except `?` or `!`.\n\n---\n\n# OUTPUT FORMAT EXAMPLE (DO NOT return any explanations. Only return the rewritten sections. NEVER include intermediate thoughts, notes, or formatting.) :\n- Script : [REWRITTEN SCRIPT]\n- Caption : [REWRITTEN CAPTION]\n- Overlay : [OVERLAY]\n",
+                    "imageDetail": "auto"
+                  }
+                ],
+                "temperature": "1",
+                "n_completions": "1",
+                "response_format": "text"
+              },
+              "module": "openai-gpt-3:CreateCompletion",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 1859,
+                  "y": -103,
+                  "name": "Generate Script, Caption, Overlay"
+                }
+              },
+              "parameters": {}
+            },
+            {
+              "id": 46,
+              "mapper": {
+                "model": "gpt-4.1-mini",
+                "prompt": "Structure the data you receive in the following format.",
+                "rawText": "{{28.choices[].message.content}}",
+                "parameters": [
+                  {
+                    "name": "Script",
+                    "type": "string",
+                    "isRequired": true,
+                    "description": "New Script Generated"
+                  },
+                  {
+                    "name": "Caption",
+                    "type": "string",
+                    "isRequired": true,
+                    "description": "New Caption Generated"
+                  },
+                  {
+                    "name": "Overlay",
+                    "type": "string",
+                    "isRequired": true,
+                    "description": "New Overlay Generated"
+                  }
+                ]
+              },
+              "module": "openai-gpt-3:transformTextToStructuredData",
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2234,
+                  "y": -134,
+                  "name": "Structured Output Parser"
+                }
+              },
+              "parameters": {}
+            },
+            {
+              "id": 143,
+              "mapper": {
+                "id": "{{24.id}}",
+                "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                "record": {
+                  "Caption": "{{46.Caption}}",
+                  "ReelURL": "{{24.ReelURL}}",
+                  "Overlay": "{{46.Overlay}}",
+                  "Script": "{{46.Script}}"
+                },
+                "typecast": false,
+                "useColumnId": false
+              },
+              "module": "airtable:ActionUpdateRecords",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 2603,
+                  "y": -126,
+                  "name": "Insert Draft"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 144,
+              "filter": {
+                "name": "failure",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{ifempty(26.status; emptystring)}}",
+                      "b": "error",
+                      "o": "text:equal"
+                    }
+                  ],
+                  [
+                    {
+                      "a": "{{length(trim(ifempty(26.transcript; emptystring)))}}",
+                      "b": "140",
+                      "o": "number:lower"
+                    }
+                  ]
+                ]
+              },
+              "mapper": {
+                "id": "{{24.id}}",
+                "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                "record": {
+                  "ErrorLog": "Skipped: no usable spoken transcript extracted from source reel or transcript scrape failed."
+                },
+                "typecast": false,
+                "useColumnId": false
+              },
+              "module": "airtable:ActionUpdateRecords",
+              "version": 3,
+              "metadata": {
+                "designer": {
+                  "x": 1800,
+                  "y": 300,
+                  "name": "Log Scraper Error"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 150,
+          "name": "If Data Retreived"
+        }
+      }
+    }
+  ],
+  "name": "7.1 Clone Viral Reels with AI Avatar",
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "dlq": true,
+      "slots": null,
+      "dataloss": false,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "roundtrips": 1,
+      "sequential": false,
+      "confidential": false,
+      "freshVariables": false,
+      "autoCommitTriggerLast": true
+    }
+  }
+}

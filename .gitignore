@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+private/
+raw-exports/
+__pycache__/
+.DS_Store

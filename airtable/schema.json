@@ -1,0 +1,46 @@
+{
+  "name": "Videos",
+  "description": "Recovered structure for the Make / Blotato social poster. No historical records included.",
+  "fields": [
+    {
+      "name": "ReelURL",
+      "type": "singleLineText"
+    },
+    {
+      "name": "BackgroundURL",
+      "type": "singleLineText"
+    },
+    {
+      "name": "Script",
+      "type": "multilineText"
+    },
+    {
+      "name": "Caption",
+      "type": "multilineText"
+    },
+    {
+      "name": "Overlay",
+      "type": "multilineText"
+    },
+    {
+      "name": "ErrorLog",
+      "type": "multilineText"
+    },
+    {
+      "name": "Approved",
+      "type": "checkbox",
+      "options": {
+        "color": "greenBright",
+        "icon": "check"
+      }
+    },
+    {
+      "name": "CreatedTime",
+      "type": "createdTime"
+    },
+    {
+      "name": "ModifiedTime",
+      "type": "lastModifiedTime"
+    }
+  ]
+}

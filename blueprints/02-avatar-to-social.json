@@ -1,0 +1,658 @@
+{
+  "flow": [
+    {
+      "id": 1,
+      "mapper": {},
+      "module": "airtable:TriggerWatchRecords",
+      "version": 3,
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 1200,
+          "name": "Approved"
+        }
+      },
+      "parameters": {
+        "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+        "view": "",
+        "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+        "config": {
+          "labelField": "ModifiedTime",
+          "triggerField": "ModifiedTime"
+        },
+        "formula": "",
+        "maxRecords": 1,
+        "useColumnId": false
+      }
+    },
+    {
+      "id": 77,
+      "mapper": {
+        "scope": "roundtrip",
+        "variables": [
+          {
+            "name": "Avatar_ID",
+            "value": "REPLACE_WITH_AVATAR_ID"
+          },
+          {
+            "name": "Voice_ID",
+            "value": "REPLACE_WITH_VOICE_ID"
+          }
+        ]
+      },
+      "module": "util:SetVariables",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 1200,
+          "name": "Setup"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 172,
+      "mapper": {
+        "test": false,
+        "title": "{{1.Overlay}}",
+        "caption": true,
+        "dimension": {
+          "width": "720",
+          "height": "1280"
+        },
+        "video_inputs": [
+          {
+            "voice": {
+              "type": "text",
+              "pitch": "50",
+              "speed": "1.1",
+              "emotion": "Excited",
+              "voice_id": "{{77.Voice_ID}}",
+              "input_text": "{{1.Script}}"
+            },
+            "character": {
+              "type": "avatar",
+              "scale": "1",
+              "offset": {
+                "x": "0",
+                "y": "0"
+              },
+              "matting": false,
+              "avatar_id": "{{77.Avatar_ID}}",
+              "avatar_style": "normal"
+            },
+            "background": {}
+          }
+        ]
+      },
+      "module": "heygen:createAnAvatarVideoV2",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 572,
+          "y": 1190,
+          "name": "Create Avatar Video"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 68,
+      "mapper": {
+        "duration": "300"
+      },
+      "module": "util:FunctionSleep",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 904,
+          "y": 1200,
+          "name": "Wait"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 13,
+      "mapper": {
+        "video_id": "{{172.video_id}}"
+      },
+      "module": "heygen:getVideo",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 1200,
+          "name": "Get Avatar Video"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 171,
+      "mapper": {
+        "url": "{{13.video_url}}"
+      },
+      "module": "blotato:media",
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 1514,
+          "y": 1203
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 21,
+      "mapper": null,
+      "module": "builtin:BasicRouter",
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 22,
+              "mapper": {
+                "text": "{{1.Caption}}",
+                "platform": "facebook",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "facebookPageId": "REPLACE_WITH_FACEBOOKPAGEID",
+                "useNextFreeSlot": false,
+                "facebookAccountId": "REPLACE_WITH_FACEBOOKACCOUNTID"
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 159,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{22.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2391,
+                      "y": -260,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": -297,
+                  "name": "Blotato Facebook"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 31,
+              "mapper": {
+                "text": "{{1.Caption}}",
+                "platform": "instagram",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "useNextFreeSlot": false,
+                "instagramAccountId": "REPLACE_WITH_INSTAGRAMACCOUNTID",
+                "instagramMediaType": "reel"
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 161,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{31.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2398,
+                      "y": 48,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": 3,
+                  "name": "Blotato Instagram"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 32,
+              "mapper": {
+                "text": "{{1.Caption}}",
+                "platform": "linkedin",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "useNextFreeSlot": false,
+                "linkedinAccountId": "REPLACE_WITH_LINKEDINACCOUNTID"
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 162,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{32.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2389,
+                      "y": 358,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": 303,
+                  "name": "Blotato LinkedIn"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 33,
+              "mapper": {
+                "text": "{{1.Caption}}",
+                "platform": "youtube",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "youtubeTitle": "{{1.Overlay}}",
+                "useNextFreeSlot": false,
+                "youtubeAccountId": "REPLACE_WITH_YOUTUBEACCOUNTID",
+                "youtubeMadeForKids": false,
+                "youtubePrivacyStatus": "public",
+                "youtubeContainsSyntheticMedia": true,
+                "youtubeShouldNotifySubscribers": true
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 163,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{33.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2387,
+                      "y": 657,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": 603,
+                  "name": "Blotato Youtube"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 34,
+              "mapper": {
+                "text": "{{1.Caption}}",
+                "platform": "pinterest",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "pinterestTitle": "{{1.Overlay}}",
+                "useNextFreeSlot": false,
+                "pinterestBoardId": "REPLACE_WITH_PINTERESTBOARDID",
+                "pinterestAccountId": "REPLACE_WITH_PINTERESTACCOUNTID"
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 164,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{34.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2377,
+                      "y": 932,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": 903,
+                  "name": "Blotato Pinterest"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 35,
+              "mapper": {
+                "text": "{{1.Caption}}",
+                "isDraft": false,
+                "platform": "tiktok",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "isYourBrand": false,
+                "autoAddMusic": false,
+                "disabledDuet": false,
+                "privacyLevel": "PUBLIC_TO_EVERYONE",
+                "isAiGenerated": true,
+                "disabledStitch": false,
+                "tiktokAccountId": "REPLACE_WITH_TIKTOKACCOUNTID",
+                "useNextFreeSlot": false,
+                "disabledComments": false,
+                "isBrandedContent": false
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 165,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{35.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2364,
+                      "y": 1236,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": 1203,
+                  "name": "Blotato TikTok"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 36,
+              "mapper": {
+                "text": "{{slice(1.Caption + \", 0, 280\")}}",
+                "platform": "twitter",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "useNextFreeSlot": false,
+                "twitterAccountId": "REPLACE_WITH_TWITTERACCOUNTID"
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 166,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{36.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2373,
+                      "y": 1547,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": 1503,
+                  "name": "Blotato Twitter"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 38,
+              "mapper": {
+                "text": "{{slice(1.Caption + \", 0, 280\")}}",
+                "platform": "bluesky",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "useNextFreeSlot": false,
+                "blueskyAccountId": "REPLACE_WITH_BLUESKYACCOUNTID"
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 168,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{38.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2392,
+                      "y": 1852,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": 1803,
+                  "name": "Blotato Bluesky"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 37,
+              "mapper": {
+                "text": "{{1.Caption}}",
+                "platform": "threads",
+                "mediaUrls": [
+                  "{{171.url}}"
+                ],
+                "useNextFreeSlot": false,
+                "threadsAccountId": "REPLACE_WITH_THREADSACCOUNTID",
+                "threadsReplyControl": "everyone"
+              },
+              "module": "blotato:Post",
+              "onerror": [
+                {
+                  "id": 167,
+                  "mapper": {
+                    "id": "{{1.id}}",
+                    "base": "REPLACE_WITH_AIRTABLE_BASE_ID",
+                    "table": "REPLACE_WITH_VIDEOS_TABLE_ID",
+                    "record": {
+                      "ErrorLog": "{{37.error}}"
+                    },
+                    "typecast": false,
+                    "useColumnId": false
+                  },
+                  "module": "airtable:ActionUpdateRecords",
+                  "version": 3,
+                  "metadata": {
+                    "designer": {
+                      "x": 2383,
+                      "y": 2109,
+                      "name": "Log Error"
+                    }
+                  },
+                  "parameters": {}
+                }
+              ],
+              "version": 1,
+              "metadata": {
+                "designer": {
+                  "x": 2088,
+                  "y": 2103,
+                  "name": "Blotato Threads"
+                }
+              },
+              "parameters": {}
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 1788,
+          "y": 1203,
+          "name": "Publish Everywhere"
+        }
+      }
+    }
+  ],
+  "name": "7.2 Clone Viral Reels with AI Avatar",
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "dlq": true,
+      "slots": null,
+      "dataloss": false,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "roundtrips": 1,
+      "sequential": false,
+      "confidential": false,
+      "freshVariables": false,
+      "autoCommitTriggerLast": true
+    }
+  }
+}
