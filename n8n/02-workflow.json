@@ -1,0 +1,336 @@
+{
+  "name": "Blotato 02 - Transcript to draft",
+  "nodes": [
+    {
+      "id": "85c33f2e-8236-47f7-ac4d-80308d2ae35b",
+      "name": "Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3b76dd24-53bf-4b7f-a667-a9aaafea42f9",
+      "name": "Find record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS?filterByFormula=AND%28%7BStatus%7D%3D%27Transcribing%27%2C%7BApifyRunId%7D%21%3D%27%27%29&maxRecords=1",
+        "method": "GET",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "c698582c-4c65-4d5a-bcf8-37accea13044",
+      "name": "Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return ($json.records || []).map(r=>({json:r}));"
+      }
+    },
+    {
+      "id": "853b2f7b-41eb-4b80-80c3-72fb71f6615c",
+      "name": "Check Apify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.apify.com/v2/actor-runs/' + $json.fields.ApifyRunId }}",
+        "method": "GET",
+        "authentication": "genericCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Apify"
+        }
+      }
+    },
+    {
+      "id": "7953f5cb-bce9-4310-baac-0ad2447f5ea2",
+      "name": "Ready transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const s=$json.data?.status; if(['FAILED','TIMED-OUT','ABORTED'].includes(s)) throw new Error('Apify '+s); return s==='SUCCEEDED'?items:[];"
+      }
+    },
+    {
+      "id": "31593447-db8a-487a-ab30-d3bcc87d9de9",
+      "name": "Read transcript",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.apify.com/v2/datasets/' + $('Record').first().json.fields.ApifyDatasetId + '/items' }}",
+        "method": "GET",
+        "authentication": "genericCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Apify"
+        }
+      }
+    },
+    {
+      "id": "7c9e2550-6be9-442f-8343-d1ea0a51bdcd",
+      "name": "Validate transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r=items.map(i=>i.json).flat(); const d=r.find(x=>x.status!=='error' && typeof x.transcript==='string' && x.transcript.trim().length>=140); if(!d) throw new Error('NO_USABLE_TRANSCRIPT'); return [{json:d}];"
+      }
+    },
+    {
+      "id": "f371008e-52fd-4369-a9aa-aa40c47840d9",
+      "name": "Claim drafting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS/' + $('Record').first().json.id }}",
+        "method": "PATCH",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {fields: {Status:'Drafting'}} }}"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "550a20e8-67ec-49df-8781-3008a161844d",
+      "name": "Write draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {model:'gpt-4.1',response_format:{type:'json_object'},messages:[{role:'system',content:\"Rewrite the supplied Instagram transcript into an original UK English talking-head script on the same exact topic and niche. Preserve its useful structure while using fresh examples, preferably private medical practice where appropriate. 60\\u201375 words, at most 1500 characters, no em dash. End with: Hit follow to stay up to date! Caption at most 500 characters and five hashtags. Overlay at most eight words with no emoji and punctuation only ? or !. Do not invent facts. Return a JSON object with Script, Caption and Overlay string keys.\"},{role:'user',content:$('Validate transcript').first().json.transcript}]} }}"
+      },
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "28fb870a-71f8-4000-a265-92a1c2af37f3",
+      "name": "Validate draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const d=JSON.parse($json.choices[0].message.content); for(const k of ['Script','Caption','Overlay']) if(typeof d[k]!=='string'||!d[k].trim()) throw new Error('Missing '+k); if(d.Script.length>1500||d.Caption.length>500||d.Overlay.trim().split(/\\s+/).length>8) throw new Error('Draft exceeds length limits'); return [{json:d}];"
+      }
+    },
+    {
+      "id": "8da78b0d-934a-487a-9ad7-5765f1e84d88",
+      "name": "Save draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS/' + $('Record').first().json.id }}",
+        "method": "PATCH",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {fields: {Status:'Draft',Script:$json.Script,Caption:$json.Caption,Overlay:$json.Overlay,Approved:false}} }}"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual": {
+      "main": [
+        [
+          {
+            "node": "Find record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find record": {
+      "main": [
+        [
+          {
+            "node": "Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record": {
+      "main": [
+        [
+          {
+            "node": "Check Apify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Apify": {
+      "main": [
+        [
+          {
+            "node": "Ready transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ready transcript": {
+      "main": [
+        [
+          {
+            "node": "Read transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read transcript": {
+      "main": [
+        [
+          {
+            "node": "Validate transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate transcript": {
+      "main": [
+        [
+          {
+            "node": "Claim drafting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim drafting": {
+      "main": [
+        [
+          {
+            "node": "Write draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write draft": {
+      "main": [
+        [
+          {
+            "node": "Validate draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate draft": {
+      "main": [
+        [
+          {
+            "node": "Save draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
