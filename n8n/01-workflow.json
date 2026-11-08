@@ -1,0 +1,218 @@
+{
+  "name": "Blotato 01 - Submit reel for transcription",
+  "nodes": [
+    {
+      "id": "4b95040e-3c04-408e-9893-13dc12711a7f",
+      "name": "Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c4b2c2e4-1a5c-4cfb-9ac9-840f2b23011f",
+      "name": "Find record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS?filterByFormula=AND%28%7BReelURL%7D%21%3D%27%27%2C%7BStatus%7D%3D%27%27%2C%7BScript%7D%3D%27%27%29&maxRecords=1",
+        "method": "GET",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "11ec5539-beb1-4ff1-adaf-746e9b47bcbe",
+      "name": "Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return ($json.records || []).map(r=>({json:r}));"
+      }
+    },
+    {
+      "id": "154f5b22-1f72-4f9f-8f61-ad33d5aad805",
+      "name": "Claim transcription",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS/' + $('Record').first().json.id }}",
+        "method": "PATCH",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {fields: {Status:'Transcribing',ErrorLog:''}} }}"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "00560003-6616-4103-bdb9-82f994c35b26",
+      "name": "Start Apify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/3C7L8IMQOkq3isV2Y/runs",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {instagramUrl:$('Record').first().json.fields.ReelURL,fastProcessing:false} }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Apify"
+        }
+      }
+    },
+    {
+      "id": "b916a8d5-21b7-4708-8cb9-86cd3d42b28f",
+      "name": "Validate run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "jsCode": "if (!$json.data?.id || !$json.data?.defaultDatasetId) throw new Error('Missing Apify run or dataset ID'); return items;"
+      }
+    },
+    {
+      "id": "e4947a40-e227-418c-a714-851d9c389654",
+      "name": "Save transcription job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.airtable.com/v0/appiq7FM7pHODREYL/tblCKulXNvW47zIsS/' + $('Record').first().json.id }}",
+        "method": "PATCH",
+        "authentication": "predefinedCredentialType",
+        "options": {
+          "timeout": 120000
+        },
+        "nodeCredentialType": "airtableTokenApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {fields: {ApifyRunId:$json.data.id,ApifyDatasetId:$json.data.defaultDatasetId}} }}"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual": {
+      "main": [
+        [
+          {
+            "node": "Find record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find record": {
+      "main": [
+        [
+          {
+            "node": "Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record": {
+      "main": [
+        [
+          {
+            "node": "Claim transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim transcription": {
+      "main": [
+        [
+          {
+            "node": "Start Apify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Apify": {
+      "main": [
+        [
+          {
+            "node": "Validate run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate run": {
+      "main": [
+        [
+          {
+            "node": "Save transcription job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
