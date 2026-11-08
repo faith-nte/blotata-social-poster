@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Blotato 01 - Submit reel for transcription",
+    "id": "CUNgUK8NO39EzgIK",
+    "url": "https://n8n.faithnte.com/workflow/CUNgUK8NO39EzgIK"
+  },
+  {
+    "name": "Blotato 02 - Transcript to draft",
+    "id": "0BvfGtgyepf58ugg",
+    "url": "https://n8n.faithnte.com/workflow/0BvfGtgyepf58ugg"
+  },
+  {
+    "name": "Blotato 03 - Approved draft to HeyGen",
+    "id": "sFYGp3wQXQfIfB8j",
+    "url": "https://n8n.faithnte.com/workflow/sFYGp3wQXQfIfB8j"
+  },
+  {
+    "name": "Blotato 04 - Check HeyGen video",
+    "id": "6SlbFxGaJtnG5jUl",
+    "url": "https://n8n.faithnte.com/workflow/6SlbFxGaJtnG5jUl"
+  },
+  {
+    "name": "Blotato 05 - Publish approved Instagram reel",
+    "id": "Utx7OJJsGOhzCKJM",
+    "url": "https://n8n.faithnte.com/workflow/Utx7OJJsGOhzCKJM"
+  }
+]
